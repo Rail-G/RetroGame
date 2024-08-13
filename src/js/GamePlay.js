@@ -59,7 +59,6 @@ export default class GamePlay {
       cellEl.addEventListener('click', event => this.onCellClick(event));
       this.boardEl.appendChild(cellEl);
     }
-
     this.cells = Array.from(this.boardEl.children);
   }
 

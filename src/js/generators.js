@@ -12,7 +12,7 @@ import Team from './Team'
 export function* characterGenerator(allowedTypes, maxLevel) {
   while(true) {
     const randomHeroIndex = Math.floor(Math.random() * allowedTypes.length)
-    const randomLvlIndex = Math.floor(Math.random() * maxLevel)
+    const randomLvlIndex = Math.floor(Math.random() * maxLevel + 1)
     const randomHero = allowedTypes[randomHeroIndex]
     yield new randomHero(randomLvlIndex)
   }

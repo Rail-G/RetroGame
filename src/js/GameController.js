@@ -41,6 +41,7 @@ export default class GameController {
 
     this.gamePlay.redrawPositions([...heroFinalPosition, ...evilFinalPosition])
 
+    this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this))
     // TODO: add event listeners to gamePlay events
     // TODO: load saved stated from stateService
   }
@@ -50,10 +51,17 @@ export default class GameController {
   }
 
   onCellEnter(index) {
+    const npc = [...heroFinalPosition, ...evilFinalPosition].find(elem => elem.position === index)
+    if(npc) {
+      const npcCharacter = npc.character
+      const desc = `${'\u{1F396}'}: ${npcCharacter.level} ${'\u2694'} ${npcCharacter.attack} ${`\u{1F6E1}`} ${npcCharacter.defence} ${'\u2764'} ${npcCharacter.health}`
+      this.gamePlay.showCellTooltip(desc, index)
+    }
     // TODO: react to mouse enter
   }
 
   onCellLeave(index) {
     // TODO: react to mouse leave
+    this.gamePlay.hideCellTooltip(index);
   }
 }
