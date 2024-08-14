@@ -8,54 +8,80 @@ import Daemon from './characters/daemon'
 import PositionedCharacter from './PositionedCharacter'
 import { generateTeam } from './generators'
 import { calcPosition, findUniquePosition } from './utils'
-
-const evilTeam = [Vampire, Undead, Daemon]
-const heroTeam = [Magician, Bowman, Swordsman]
-const heroGenerated = generateTeam(heroTeam, 3, 7)
-const evilGenerated = generateTeam(evilTeam, 3, 7)
-const heroPosition = calcPosition('hero', 8)
-const evilPosition = calcPosition('evil', 8)
-const uniqueHeroPosition = findUniquePosition(heroPosition, heroGenerated.characters.length)
-const uniqueEvilPosition = findUniquePosition(evilPosition, evilGenerated.characters.length)
-
-
-const heroFinalPosition = []
-const evilFinalPosition = []
-
-for (let index = 0; index < heroGenerated.characters.length; index++) {
-  heroFinalPosition.push(new PositionedCharacter(heroGenerated.characters[index], uniqueHeroPosition[index]))
-}
-
-for (let index = 0; index < evilGenerated.characters.length; index++) {
-  evilFinalPosition.push(new PositionedCharacter(evilGenerated.characters[index], uniqueEvilPosition[index]))
-}
+import GamePlay from './GamePlay'
+import cursors from './cursors'
 
 export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
+    this.npcPosition = this.loadGame(this.gamePlay.boardSize, 3, 3)
+    this.currentCellId = null;
+    this.currentNpc = undefined;
+    this.currentChar = null;
   }
 
   init() {
     this.gamePlay.drawUi(themes.mountain)
 
-    this.gamePlay.redrawPositions([...heroFinalPosition, ...evilFinalPosition])
+    this.gamePlay.redrawPositions([...this.npcPosition.player, ...this.npcPosition.evil])
 
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this))
+    this.gamePlay.addCellClickListener(this.onCellClick.bind(this))
     // TODO: add event listeners to gamePlay events
     // TODO: load saved stated from stateService
   }
 
   onCellClick(index) {
-    // TODO: react to click
+    const npc = [...this.npcPosition.player, ...this.npcPosition.evil].find(elem => elem.position === index && ['bowman', 'swordsman', 'magician'].includes(elem.character.type))
+    if (this.currentCellId != null) {
+      this.gamePlay.deselectCell(this.currentCellId)
+      this.gamePlay.deselectCell(this.currentChar)
+      this.currentCellId = null
+    }
+    if (npc) {
+      this.gamePlay.selectCell(index)
+      this.gamePlay.setCursor(cursors.pointer)
+      this.currentCellId = index
+      this.currentNpc = npc.character
+    } else {
+      GamePlay.showError('No')
+      this.currentCellId = null
+      this.currentChar = null
+      this.currentNpc = undefined
+      this.gamePlay.setCursor(cursors.auto) 
+    }
   }
 
   onCellEnter(index) {
-    const npc = [...heroFinalPosition, ...evilFinalPosition].find(elem => elem.position === index)
+    const npc = [...this.npcPosition.player].find(elem => elem.position === index)
+    const evilNpc = [...this.npcPosition.evil].find(elem => elem.position === index)
     if(npc) {
       const npcCharacter = npc.character
       const desc = `${'\u{1F396}'}: ${npcCharacter.level} ${'\u2694'} ${npcCharacter.attack} ${`\u{1F6E1}`} ${npcCharacter.defence} ${'\u2764'} ${npcCharacter.health}`
       this.gamePlay.showCellTooltip(desc, index)
+    }
+    const stepX = Math.abs(Math.floor(this.currentCellId / this.gamePlay.boardSize) - Math.floor(index / this.gamePlay.boardSize))
+    const stepY = Math.abs(Math.floor(this.currentCellId % this.gamePlay.boardSize) - Math.floor(index % this.gamePlay.boardSize))
+    if (this.currentNpc != undefined) {
+      if (Math.max(stepX, stepY) <= this.currentNpc.step && 0 < Math.max(stepX, stepY)) {
+        if (this.currentChar != null) {
+          this.gamePlay.deselectCell(this.currentChar)
+        }
+        this.gamePlay.selectCell(index, 'green')
+        this.gamePlay.setCursor(cursors.pointer) 
+        if (npc && npc.position == index) {
+          this.gamePlay.deselectCell(index)
+        }
+        if (evilNpc && evilNpc.position == index) {
+          this.gamePlay.selectCell(index, 'red')
+          this.gamePlay.setCursor(cursors.crosshair)
+        }
+        this.currentChar = index; 
+      } else {
+        this.gamePlay.setCursor(cursors.notallowed)
+        this.gamePlay.deselectCell(this.currentChar)
+      }
     }
     // TODO: react to mouse enter
   }
@@ -63,5 +89,23 @@ export default class GameController {
   onCellLeave(index) {
     // TODO: react to mouse leave
     this.gamePlay.hideCellTooltip(index);
+  }
+
+  loadGame(bSize, maxLvl, quantity) {
+    const evilTeam = [Vampire, Undead, Daemon]
+    const heroTeam = [Magician, Bowman, Swordsman]
+    const heroGenerated = generateTeam(heroTeam, maxLvl, quantity)
+    const evilGenerated = generateTeam(evilTeam, maxLvl, quantity)
+    const heroPosition = calcPosition('hero', bSize)
+    const evilPosition = calcPosition('evil', bSize)
+    const uniqueHeroPosition = findUniquePosition(heroPosition, heroGenerated.characters.length)
+    const uniqueEvilPosition = findUniquePosition(evilPosition, evilGenerated.characters.length)
+    const finalPosition = {player: [], evil: []}
+
+    for (let index = 0; index < quantity; index++) {
+      finalPosition.player.push(new PositionedCharacter(heroGenerated.characters[index], uniqueHeroPosition[index]))
+      finalPosition.evil.push(new PositionedCharacter(evilGenerated.characters[index], uniqueEvilPosition[index]))
+    }
+    return finalPosition
   }
 }
