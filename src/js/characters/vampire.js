@@ -6,6 +6,7 @@ export default class Vampire extends Character {
         this.attack = 25;
         this.defence = 25;
         this.health = 100;
+        this.step = 1;
         this.type = 'vampire'
     }
 }
