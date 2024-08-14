@@ -7,6 +7,7 @@ export default class Bowman extends Character {
         this.defence = 25;
         this.health = 100;
         this.step = 2;
+        this.distance = 2;
         this.type = 'bowman';
     }
 }
