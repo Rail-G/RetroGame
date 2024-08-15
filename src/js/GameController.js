@@ -45,7 +45,17 @@ export default class GameController {
       this.currentCellId = index
       this.currentNpc = npc.character
     } else {
-      GamePlay.showError('No')
+      let v = true;
+      if (this.currentNpc && [...this.npcPosition.evil].some(elem => elem.position === index) || [...this.npcPosition.player].some(elem => elem.position === index)) {
+        GamePlay.showError('Врага можно только бить, а не наступать')
+        v = false
+      }
+      if (v && this.currentChar == index) {
+        const globPlayer = this.npcPosition.player.findIndex(elem =>elem.character == this.currentNpc)
+        this.npcPosition.player[globPlayer].position = this.currentChar
+        this.gamePlay.redrawPositions([...this.npcPosition.player, ...this.npcPosition.evil])
+        v = true
+      }
       this.currentCellId = null
       this.currentChar = null
       this.currentNpc = undefined
@@ -74,10 +84,22 @@ export default class GameController {
           this.gamePlay.deselectCell(index)
         }
         if (evilNpc && evilNpc.position == index) {
+          this.gamePlay.deselectCell(index)
+          if (Math.max(stepX, stepY) <= this.currentNpc.distance && 0 < Math.max(stepX, stepY)) {
+            this.gamePlay.selectCell(index, 'red')
+            this.gamePlay.setCursor(cursors.crosshair)
+          }
+        }
+        this.currentChar = index;
+      } else if (Math.max(stepX, stepY) <= this.currentNpc.distance && 0 < Math.max(stepX, stepY)) {
+        this.gamePlay.setCursor(cursors.pointer) 
+        this.gamePlay.deselectCell(this.currentChar)
+        if (evilNpc && evilNpc.position == index) {
+          // this.gamePlay.deselectCell(this.currentChar)
           this.gamePlay.selectCell(index, 'red')
           this.gamePlay.setCursor(cursors.crosshair)
+          this.currentChar = index;
         }
-        this.currentChar = index; 
       } else {
         this.gamePlay.setCursor(cursors.notallowed)
         this.gamePlay.deselectCell(this.currentChar)
