@@ -8,7 +8,6 @@ import Daemon from './characters/daemon'
 import PositionedCharacter from './PositionedCharacter'
 import { generateTeam } from './generators'
 import { calcPosition, findUniquePosition } from './utils'
-import GamePlay from './GamePlay'
 import cursors from './cursors'
 
 export default class GameController {
@@ -19,6 +18,8 @@ export default class GameController {
     this.currentCellId = null;
     this.currentNpc = undefined;
     this.currentChar = null;
+    this.stepX = undefined;
+    this.stepY = undefined;
   }
 
   init() {
@@ -32,22 +33,33 @@ export default class GameController {
     // TODO: load saved stated from stateService
   }
 
-  onCellClick(index) {
-    const npc = [...this.npcPosition.player, ...this.npcPosition.evil].find(elem => elem.position === index && ['bowman', 'swordsman', 'magician'].includes(elem.character.type))
+  async onCellClick(index) {
+    const npc = [...this.npcPosition.player].find(elem => elem.position === index)
+    const evilNpc = [...this.npcPosition.evil].find(elem => elem.position === index)
     if (this.currentCellId != null) {
       this.gamePlay.deselectCell(this.currentCellId)
       this.gamePlay.deselectCell(this.currentChar)
-      this.currentCellId = null
+      // this.currentCellId = null
     }
     if (npc) {
       this.gamePlay.selectCell(index)
       this.gamePlay.setCursor(cursors.pointer)
       this.currentCellId = index
       this.currentNpc = npc.character
+      this.gamePlay.hideCellTooltip(this.currentCellId);
     } else {
       let v = true;
       if (this.currentNpc && [...this.npcPosition.evil].some(elem => elem.position === index) || [...this.npcPosition.player].some(elem => elem.position === index)) {
-        GamePlay.showError('Врага можно только бить, а не наступать')
+        if (Math.max(this.stepX, this.stepY) <= this.currentNpc.distance && 0 < Math.max(this.stepX, this.stepY)) {
+          const damage = Math.max(this.currentNpc.attack - evilNpc.character.defence, this.currentNpc.attack * 0.1)
+          evilNpc.character.health = evilNpc.character.health - damage;
+          this.currentNpc = undefined
+          await this.gamePlay.showDamage(index, damage)
+          if (evilNpc.character.health <= 0) {
+            this.npcPosition.evil = this.npcPosition.evil.filter(elem => index != elem.position)
+          }
+          this.gamePlay.redrawPositions([...this.npcPosition.player, ...this.npcPosition.evil])
+        }
         v = false
       }
       if (v && this.currentChar == index) {
@@ -71,10 +83,13 @@ export default class GameController {
       const desc = `${'\u{1F396}'}: ${npcCharacter.level} ${'\u2694'} ${npcCharacter.attack} ${`\u{1F6E1}`} ${npcCharacter.defence} ${'\u2764'} ${npcCharacter.health}`
       this.gamePlay.showCellTooltip(desc, index)
     }
-    const stepX = Math.abs(Math.floor(this.currentCellId / this.gamePlay.boardSize) - Math.floor(index / this.gamePlay.boardSize))
-    const stepY = Math.abs(Math.floor(this.currentCellId % this.gamePlay.boardSize) - Math.floor(index % this.gamePlay.boardSize))
+    if (!this.currentNpc) {
+      return
+    }
+    this.stepX = Math.abs(Math.floor(this.currentCellId / this.gamePlay.boardSize) - Math.floor(index / this.gamePlay.boardSize))
+    this.stepY = Math.abs(Math.floor(this.currentCellId % this.gamePlay.boardSize) - Math.floor(index % this.gamePlay.boardSize))
     if (this.currentNpc != undefined) {
-      if (Math.max(stepX, stepY) <= this.currentNpc.step && 0 < Math.max(stepX, stepY)) {
+      if (Math.max(this.stepX, this.stepY) <= this.currentNpc.step && 0 < Math.max(this.stepX, this.stepY)) {
         if (this.currentChar != null) {
           this.gamePlay.deselectCell(this.currentChar)
         }
@@ -85,13 +100,13 @@ export default class GameController {
         }
         if (evilNpc && evilNpc.position == index) {
           this.gamePlay.deselectCell(index)
-          if (Math.max(stepX, stepY) <= this.currentNpc.distance && 0 < Math.max(stepX, stepY)) {
+          if (Math.max(this.stepX, this.stepY) <= this.currentNpc.distance && 0 < Math.max(this.stepX, this.stepY)) {
             this.gamePlay.selectCell(index, 'red')
             this.gamePlay.setCursor(cursors.crosshair)
           }
         }
         this.currentChar = index;
-      } else if (Math.max(stepX, stepY) <= this.currentNpc.distance && 0 < Math.max(stepX, stepY)) {
+      } else if (Math.max(this.stepX, this.stepY) <= this.currentNpc.distance && 0 < Math.max(this.stepX, this.stepY)) {
         this.gamePlay.setCursor(cursors.pointer) 
         this.gamePlay.deselectCell(this.currentChar)
         if (evilNpc && evilNpc.position == index) {
