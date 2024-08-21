@@ -252,3 +252,43 @@ body {
     font-size: 1.5rem;
   }
 }
+
+@font-face {
+	font-family: 'FontName'; 
+	src: url(../font/TunnelFront.ttf); 
+}
+
+.theendinfo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(211,211,211, 0.8);
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 99;
+}
+
+.losetext {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: rgb(255, 2, 2) 1px 0 5px;
+  color: #ff0000;
+  font-family: 'Fontname';
+  font-size: 100px;
+  letter-spacing: 10px;
+}
+
+.wintext {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: rgb(25, 184, 11) 1px 0 5px;
+  color: rgb(25, 184, 11);
+  font-family: 'Fontname';
+  font-size: 100px;
+  letter-spacing: 10px;
+}
