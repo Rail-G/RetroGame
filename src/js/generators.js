@@ -12,9 +12,12 @@ import Team from './Team'
 export function* characterGenerator(allowedTypes, maxLevel) {
   while(true) {
     const randomHeroIndex = Math.floor(Math.random() * allowedTypes.length)
-    const randomLvlIndex = Math.floor(Math.random() * maxLevel + 1)
-    const randomHero = allowedTypes[randomHeroIndex]
-    yield new randomHero(randomLvlIndex)
+    const randomLvl = Math.floor(Math.random() * maxLevel + 1)
+    const randomNpc = allowedTypes[randomHeroIndex]
+    const npcObj = new randomNpc(randomLvl)
+    npcObj.attack = Math.round(npcObj.attack * 1.8 ** (randomLvl - 1))
+    npcObj.defence = Math.round(npcObj.defence * 1.8 ** (randomLvl - 1))
+    yield npcObj
   }
 }
 
@@ -26,6 +29,9 @@ export function* characterGenerator(allowedTypes, maxLevel) {
  * @returns экземпляр Team, хранящий экземпляры персонажей. Количество персонажей в команде - characterCount
  * */
 export function generateTeam(allowedTypes, maxLevel, characterCount) {
+  if (maxLevel > 4) {
+    maxLevel = 4
+  }
   const team = new Team()
   const hero = characterGenerator(allowedTypes, maxLevel)
   for (let i = 0; i < characterCount; i++) {
