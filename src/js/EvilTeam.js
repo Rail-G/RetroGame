@@ -2,16 +2,16 @@ import GameController from "./GameController"
 
 export default class EvilTeam {
     constructor(bSize) {
-        this.npcTeam = undefined;
+        this.evilTeam = undefined;
+        this.playerTeam = undefined;
         this.bSize = bSize;
         this.calculatedPositions = {step: [], distance: []};
         this.checkedPlayers = {player: {step: [], distance: []}, evil: []};
     }
 
     getRandomNpc() {
-        console.log(this.npcTeam)
-        const randomId = Math.floor(Math.random() * this.npcTeam.evil.length)
-        return this.npcTeam.evil[randomId]
+        const randomId = Math.floor(Math.random() * this.evilTeam.length)
+        return this.evilTeam[randomId]
     }
 
     setRandomPosition(evilNpc) {
@@ -48,32 +48,33 @@ export default class EvilTeam {
     }
 
     checkToPlayerDistance () {
-        for (let index = 0; index < this.npcTeam.player.length; index++) {
-            if(this.calculatedPositions.step.includes(this.npcTeam.player[index].position)) {
-                this.checkedPlayers.player.step.push(this.npcTeam.player[index].position)
+        for (let index = 0; index < this.playerTeam.length; index++) {
+            if(this.calculatedPositions.step.includes(this.playerTeam[index].position)) {
+                this.checkedPlayers.player.step.push(this.playerTeam[index].position)
             }
-            if(this.calculatedPositions.distance.includes(this.npcTeam.player[index].position)) {
-                this.checkedPlayers.player.distance.push(this.npcTeam.player[index].position)
+            if(this.calculatedPositions.distance.includes(this.playerTeam[index].position)) {
+                this.checkedPlayers.player.distance.push(this.playerTeam[index].position)
             }
         }
     }
 
     checkToEvilDistance () {
-        for (let index = 0; index < this.npcTeam.evil.length; index++) {
-            if(this.calculatedPositions.step.includes(this.npcTeam.evil[index].position)) {
-                this.checkedPlayers.evil.push(this.npcTeam.evil[index].position)
+        for (let index = 0; index < this.evilTeam.length; index++) {
+            if(this.calculatedPositions.step.includes(this.evilTeam[index].position)) {
+                this.checkedPlayers.evil.push(this.evilTeam[index].position)
             }
         }
     }
 
-    getRandomAction(team, chance = 0) {
-        this.npcTeam = team;
+    getRandomAction(playerTeam, evilTeam) {
+        this.playerTeam = playerTeam;
+        this.evilTeam = evilTeam;
         this.calculatedPositions = {step: [], distance: []};
         this.checkedPlayers = {player: {step: [], distance: []}, evil: []};
         const evilNpc = this.calculatePositions()
         this.checkToPlayerDistance()
         this.checkToEvilDistance()
-        const action = Math.round(Math.random() + chance) ? 'attack' : 'step'
+        const action = Math.round(Math.random()) ? 'attack' : 'step'
         if (!this.checkedPlayers.player.distance.length || action == 'step') {
             return {step: this.setRandomPosition(evilNpc)}
         } else {
