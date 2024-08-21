@@ -9,6 +9,7 @@ import PositionedCharacter from './PositionedCharacter'
 import { generateTeam } from './generators'
 import { calcPosition, findUniquePosition } from './utils'
 import cursors from './cursors'
+import EvilTeam from './EvilTeam'
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -20,6 +21,8 @@ export default class GameController {
     this.currentChar = null;
     this.stepX = undefined;
     this.stepY = undefined;
+    this.evilTeam = new EvilTeam(this.gamePlay.boardSize);
+    this.antiFast = true;
   }
 
   init() {
@@ -36,12 +39,14 @@ export default class GameController {
   async onCellClick(index) {
     const npc = [...this.npcPosition.player].find(elem => elem.position === index)
     const evilNpc = [...this.npcPosition.evil].find(elem => elem.position === index)
+    if (npc && this.currentNpc == npc.character) {
+      return
+    }
     if (this.currentCellId != null) {
       this.gamePlay.deselectCell(this.currentCellId)
       this.gamePlay.deselectCell(this.currentChar)
-      // this.currentCellId = null
     }
-    if (npc) {
+    if (npc && this.antiFast) {
       this.gamePlay.selectCell(index)
       this.gamePlay.setCursor(cursors.pointer)
       this.currentCellId = index
@@ -49,7 +54,7 @@ export default class GameController {
       this.gamePlay.hideCellTooltip(this.currentCellId);
     } else {
       let v = true;
-      if (this.currentNpc && [...this.npcPosition.evil].some(elem => elem.position === index) || [...this.npcPosition.player].some(elem => elem.position === index)) {
+      if (this.currentNpc && [...this.npcPosition.evil].some(elem => elem.position === index)) {
         if (Math.max(this.stepX, this.stepY) <= this.currentNpc.distance && 0 < Math.max(this.stepX, this.stepY)) {
           const damage = Math.max(this.currentNpc.attack - evilNpc.character.defence, this.currentNpc.attack * 0.1)
           evilNpc.character.health = evilNpc.character.health - damage;
@@ -58,20 +63,41 @@ export default class GameController {
           if (evilNpc.character.health <= 0) {
             this.npcPosition.evil = this.npcPosition.evil.filter(elem => index != elem.position)
           }
-          this.gamePlay.redrawPositions([...this.npcPosition.player, ...this.npcPosition.evil])
         }
         v = false
       }
       if (v && this.currentChar == index) {
         const globPlayer = this.npcPosition.player.findIndex(elem =>elem.character == this.currentNpc)
-        this.npcPosition.player[globPlayer].position = this.currentChar
-        this.gamePlay.redrawPositions([...this.npcPosition.player, ...this.npcPosition.evil])
+        this.npcPosition.player[globPlayer].position = this.currentChar        
         v = true
       }
+      if (this.currentChar != index) {
+        this.currentCellId = null
+        this.currentChar = null
+        this.currentNpc = undefined
+        this.gamePlay.setCursor(cursors.auto)
+        return
+      }
+      this.gamePlay.redrawPositions([...this.npcPosition.player, ...this.npcPosition.evil])
       this.currentCellId = null
       this.currentChar = null
       this.currentNpc = undefined
-      this.gamePlay.setCursor(cursors.auto) 
+      this.gamePlay.setCursor(cursors.auto)
+      const evilAction = this.evilTeam.getRandomAction(this.npcPosition)
+      if (evilAction.step) {
+        evilAction.step[1].position = evilAction.step[0]
+      } else if (evilAction.attack) {
+        this.antiFast = false;
+        const player = this.npcPosition.player.find(elem => elem.position == evilAction.attack[0])
+        const damage = Math.max(evilAction.attack[1].character.attack - player.character.defence, evilAction.attack[1].character.attack * 0.1)
+        player.character.health = player.character.health - damage;
+        await this.gamePlay.showDamage(evilAction.attack[0], damage)
+        if (player.character.health <= 0) {
+          this.npcPosition.player = this.npcPosition.player.filter(elem => evilAction.attack[0] != elem.position)
+        }
+        this.antiFast = true;
+      }
+      this.gamePlay.redrawPositions([...this.npcPosition.player, ...this.npcPosition.evil])
     }
   }
 
@@ -110,7 +136,6 @@ export default class GameController {
         this.gamePlay.setCursor(cursors.pointer) 
         this.gamePlay.deselectCell(this.currentChar)
         if (evilNpc && evilNpc.position == index) {
-          // this.gamePlay.deselectCell(this.currentChar)
           this.gamePlay.selectCell(index, 'red')
           this.gamePlay.setCursor(cursors.crosshair)
           this.currentChar = index;
@@ -120,7 +145,6 @@ export default class GameController {
         this.gamePlay.deselectCell(this.currentChar)
       }
     }
-    // TODO: react to mouse enter
   }
 
   onCellLeave(index) {
