@@ -264,7 +264,6 @@ body {
   justify-content: center;
   height: 100%;
   width: 100%;
-  background-color: rgba(211,211,211, 0.8);
   position: absolute;
   top: 0;
   left: 0;
@@ -280,15 +279,32 @@ body {
   font-family: 'Fontname';
   font-size: 100px;
   letter-spacing: 10px;
+  animation: moveIn 3s 0s cubic-bezier(.36,0,.06,1) alternate 1 ;
 }
 
 .wintext {
   display: flex;
   align-items: center;
   justify-content: center;
-  text-shadow: rgb(25, 184, 11) 1px 0 5px;
-  color: rgb(25, 184, 11);
+  text-shadow: rgb(251, 255, 0) 1px 0 5px;
+  color: rgb(251, 255, 0);
   font-family: 'Fontname';
   font-size: 100px;
   letter-spacing: 10px;
+  animation: moveIn 3s 0s cubic-bezier(.36,0,.06,1) alternate 1 ;
+}
+
+@keyframes moveIn {
+  50%, 100% { 
+    transform: translateY(0em)
+  }
+  0%   { 
+  opacity: 0; 
+  filter: blur(10px);
+  
+  }
+  100% { 
+  opacity: 1; 
+  filter: blur(0px);
+  }
 }
