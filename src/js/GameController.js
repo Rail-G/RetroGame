@@ -10,6 +10,7 @@ import { generateTeam } from './generators'
 import { calcPosition, findUniquePosition } from './utils'
 import cursors from './cursors'
 import EvilTeam from './EvilTeam'
+import GameState from "./GameState"
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -29,11 +30,14 @@ export default class GameController {
 
   init() {
     this.gamePlay.drawUi(Object.entries(themes)[this.round][1])
-    console.log(this.playerTeam, this.evilTeam)
     this.gamePlay.redrawPositions([...this.playerTeam, ...this.evilTeam])
 
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this))
     this.gamePlay.addCellClickListener(this.onCellClick.bind(this))
+    this.gamePlay.addNewGameListener(this.newGame.bind(this))
+    this.gamePlay.addSaveGameListener(this.saveGame.bind(this))
+    this.gamePlay.addLoadGameListener(this.loadGame.bind(this))
+    GameState.saveFirstInfo(this.evilTeam.length)
   }
 
   async onCellClick(index) {
@@ -44,6 +48,8 @@ export default class GameController {
     }
     if (this.currentCellId != null) {
       this.gamePlay.deselectCell(this.currentCellId)
+    }
+    if (this.currentChar != null) {
       this.gamePlay.deselectCell(this.currentChar)
     }
     if (npc && this.antiFast) {
@@ -120,9 +126,11 @@ export default class GameController {
           this.playerTeam[i].position = uniqueHeroPosition[i]
         }
         this.evilTeam = this.loadEvilTeam(this.gamePlay.boardSize, 3, 3)
+        GameState.saveFirstInfo(this.evilTeam.length)
         this.gamePlay.drawUi(Object.entries(themes)[this.round][1])
         this.gamePlay.redrawPositions([...this.playerTeam, ...this.evilTeam])
       } else if (!this.evilTeam.length) {
+        console.log(GameState.calculatePoint(this.playerTeam))
         const boardEl = document.querySelector('.board-container');
         boardEl.style.position = 'relative';
         const div = document.createElement('div')
@@ -159,14 +167,16 @@ export default class GameController {
         if (npc && npc.position == index) {
           this.gamePlay.deselectCell(index)
         }
+        this.currentChar = index;
         if (evilNpc && evilNpc.position == index) {
           this.gamePlay.deselectCell(index)
           if (Math.max(this.stepX, this.stepY) <= this.currentNpc.distance && 0 < Math.max(this.stepX, this.stepY)) {
             this.gamePlay.selectCell(index, 'red')
             this.gamePlay.setCursor(cursors.crosshair)
+          } else {
+            this.currentChar = null;
           }
         }
-        this.currentChar = index;
       } else if (Math.max(this.stepX, this.stepY) <= this.currentNpc.distance && 0 < Math.max(this.stepX, this.stepY)) {
         this.gamePlay.setCursor(cursors.pointer) 
         this.gamePlay.deselectCell(this.currentChar)
@@ -232,5 +242,31 @@ export default class GameController {
         }
     })
     return playerTeamArr
-}
+  }
+  newGame() {
+    this.playerTeam = this.loadPlayerTeam(this.gamePlay.boardSize, 3, 3)
+    this.evilTeam = this.loadEvilTeam(this.gamePlay.boardSize, 3, 3)
+    this.currentCellId = null;
+    this.currentNpc = undefined;
+    this.currentChar = null;
+    this.stepX = undefined;
+    this.stepY = undefined;
+    this.evilTeamStep = new EvilTeam(this.gamePlay.boardSize);
+    this.round = 0;
+    this.gamePlay.drawUi(Object.entries(themes)[this.round][1])
+    this.gamePlay.redrawPositions([...this.playerTeam, ...this.evilTeam])
+  }
+  loadGame() {
+    const storageData = this.stateService.load();
+    this.playerTeam = storageData.player
+    this.evilTeam = storageData.evil
+    this.round = storageData.round
+    this.gamePlay.drawUi(Object.entries(themes)[this.round][1])
+    this.gamePlay.redrawPositions([...this.playerTeam, ...this.evilTeam])
+  }
+
+  saveGame() {
+    this.stateService.save({player: this.playerTeam, evil: this.evilTeam, round: this.round})
+  }
+
 }
