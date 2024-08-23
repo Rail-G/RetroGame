@@ -5,7 +5,7 @@ import Daemon from "../characters/daemon";
 import { generateTeam, characterGenerator } from "../generators";
 
 test('error test', () => {
-    expect(() => new Character(1)).toThrowError('Вам не доступна это команда!')
+    expect(() => new Character(1)).toThrow('Вам не доступна это команда!')
 })
 
 const data = [
@@ -31,7 +31,7 @@ test('generate hero/evil character', () => {
     expect(result).toHaveLength(15)
 })
 
-test("test generatorTeam function", () => {
+test("testing generatorTeam function", () => {
     const team = [Vampire, Swordsman, Daemon]
     const npcTeam = generateTeam(team, 5, 15)
     expect(npcTeam.characters).toHaveLength(15)
