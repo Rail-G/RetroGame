@@ -1,5 +1,3 @@
-import GameController from "./GameController"
-
 export default class EvilTeam {
     constructor(bSize) {
         this.evilTeam = undefined;
@@ -17,13 +15,13 @@ export default class EvilTeam {
     setRandomPosition(evilNpc) {
         let randomPosition = Math.floor(Math.random() * this.calculatedPositions.step.length)
         const allPositions = [...this.checkedPlayers.evil, ...this.checkedPlayers.player.step]
+        /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
         while(true) {
             if (!allPositions.includes(this.calculatedPositions.step[randomPosition])) {
                 break
             }
             randomPosition = Math.floor(Math.random() * this.calculatedPositions.step.length)
         }
-        // console.log(this.calculatedPositions, this.calculatedPositions.step[randomPosition], allPositions)
         return [this.calculatedPositions.step[randomPosition], evilNpc]
     }
 
