@@ -103,6 +103,12 @@ export default class GameController {
             this.playerTeam = this.playerTeam.filter(elem => evilAction.attack[0] != elem.position)
           }
           this.antiFast = true;
+        } else if (evilAction.health) {
+          this.antiFast = false;
+          const evil = this.evilTeam.find(elem => elem.position == evilAction.health)
+          evil.character.health = evil.character.health + 20
+          await this.gamePlay.showHealth(evilAction.health, 20)
+          this.antiFast = true;
         }
       }
       this.gamePlay.redrawPositions([...this.playerTeam, ...this.evilTeam])

@@ -219,6 +219,21 @@ export default class GamePlay {
     });
   }
 
+  showHealth(index, damage) {
+    return new Promise((resolve) => {
+      const cell = this.cells[index];
+      const damageEl = document.createElement('span');
+      damageEl.textContent = damage;
+      damageEl.classList.add('health');
+      cell.appendChild(damageEl);
+
+      damageEl.addEventListener('animationend', () => {
+        cell.removeChild(damageEl);
+        resolve();
+      });
+    });
+  }
+
   setCursor(cursor) {
     this.boardEl.style.cursor = cursor;
   }

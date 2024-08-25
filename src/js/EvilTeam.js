@@ -4,7 +4,7 @@ export default class EvilTeam {
         this.playerTeam = undefined;
         this.bSize = bSize;
         this.calculatedPositions = {step: [], distance: []};
-        this.checkedPlayers = {player: {step: [], distance: []}, evil: []};
+        this.checkedPlayers = {player: {step: [], distance: []}, evil: {step: [], distance: []}};
     }
 
     getRandomNpc() {
@@ -14,7 +14,7 @@ export default class EvilTeam {
 
     setRandomPosition(evilNpc) {
         let randomPosition = Math.floor(Math.random() * this.calculatedPositions.step.length)
-        const allPositions = [...this.checkedPlayers.evil, ...this.checkedPlayers.player.step]
+        const allPositions = [...this.checkedPlayers.evil.step, ...this.checkedPlayers.player.step]
         /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
         while(true) {
             if (!allPositions.includes(this.calculatedPositions.step[randomPosition])) {
@@ -59,19 +59,48 @@ export default class EvilTeam {
     checkToEvilDistance () {
         for (let index = 0; index < this.evilTeam.length; index++) {
             if(this.calculatedPositions.step.includes(this.evilTeam[index].position)) {
-                this.checkedPlayers.evil.push(this.evilTeam[index].position)
+                this.checkedPlayers.evil.step.push(this.evilTeam[index].position)
+            }
+            if(this.calculatedPositions.distance.includes(this.evilTeam[index].position)) {
+                this.checkedPlayers.evil.distance.push(this.evilTeam[index].position)
             }
         }
+    }
+
+    healthTeamNpc() {
+        const npcInDistance = this.checkedPlayers.evil.distance
+        const result = {}
+        if (npcInDistance.length) {
+            this.evilTeam.forEach(elem => {
+                if (npcInDistance.includes(elem.position) && elem.character.health < 100) {
+                    result[elem.position] = elem.character.health
+                }
+            })
+        }
+        let currId = Object.keys(result)[0]
+        Object.keys(result).find(elem => {
+            if (result[elem] < result[currId]) {
+                currId = elem
+            }
+        })
+        return currId
     }
 
     getRandomAction(playerTeam, evilTeam) {
         this.playerTeam = playerTeam;
         this.evilTeam = evilTeam;
         this.calculatedPositions = {step: [], distance: []};
-        this.checkedPlayers = {player: {step: [], distance: []}, evil: []};
+        this.checkedPlayers = {player: {step: [], distance: []}, evil: {step: [], distance: []}};
         const evilNpc = this.calculatePositions()
         this.checkToPlayerDistance()
         this.checkToEvilDistance()
+        if (Math.round(Math.random()) && evilNpc.character.type == 'vampire') {
+            const healthy = this.healthTeamNpc()
+            console.log(healthy)
+            if (healthy != undefined) {
+                return {health: healthy}
+            }
+        }
         const action = Math.round(Math.random()) ? 'attack' : 'step'
         if (!this.checkedPlayers.player.distance.length || action == 'step') {
             return {step: this.setRandomPosition(evilNpc)}
