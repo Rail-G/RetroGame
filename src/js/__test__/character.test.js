@@ -33,7 +33,10 @@ test('generate hero/evil character', () => {
 
 test("testing generatorTeam function", () => {
     const team = [Vampire, Swordsman, Daemon]
-    const npcTeam = generateTeam(team, 5, 15)
+    const npcTeam = generateTeam(team, 3, 15)
     expect(npcTeam.characters).toHaveLength(15)
     expect(npcTeam.characters).toEqual(expect.anything())
+    const npcTeamSecond = generateTeam(team, 5, 15)
+    expect(npcTeamSecond.characters).toHaveLength(15)
+    expect(npcTeamSecond.characters).toEqual(expect.anything())
 })

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Вы неплохо овладели не только продвинутыми возможностями JS, но и инфраструктурными инструментами. Вам поручили первый проект: разработать небольшую пошаговую игру.",
   "main": "index.js",
+  "jest": {
+        "testPathIgnorePatterns": ["src/js/GameStateService.js"]
+      },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prodBuild": "webpack --mode production",

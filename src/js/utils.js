@@ -55,7 +55,6 @@ export function calcHealthLevel(health) {
   return 'high';
 }
 
-
 export function calcPosition(team, boardSize) {
   const result = []
   let teamId = null

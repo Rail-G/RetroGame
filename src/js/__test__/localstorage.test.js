@@ -14,7 +14,7 @@ test('good mocked', () => {
 
 test('error mocked', () => {
     const storage = {
-      getItem: jest.fn(() => {throw new Error('Invalid state')}) // Mocking getItem to return invalid JSON
+      getItem: jest.fn(() => {throw new Error('Invalid state')})
     };
     const stateService = new GameStateService(storage)
     stateService.load.mockImplementation(() => {throw new Error('Invalid state')})
