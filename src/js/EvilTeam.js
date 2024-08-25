@@ -26,6 +26,24 @@ export default class EvilTeam {
     }
 
     attackPlayer(evilNpc) {
+        const playerInDistance = this.checkedPlayers.player.distance
+        const result = {}
+        if (playerInDistance.length) {
+            this.playerTeam.forEach(elem => {
+                if (playerInDistance.includes(elem.position) && elem.character.health < 100) {
+                    result[elem.position] = elem.character.health
+                }
+            })
+        }
+        let currPosition = Object.keys(result)[0]
+        Object.keys(result).find(elem => {
+            if (result[elem] < result[currPosition]) {
+                currPosition = elem
+            }
+        })
+        if (Object.keys(result).length) {
+            return [currPosition, evilNpc]
+        }
         return [this.checkedPlayers.player.distance[Math.floor(Math.random() * this.checkedPlayers.player.distance.length)], evilNpc]
     }
 
@@ -96,7 +114,6 @@ export default class EvilTeam {
         this.checkToEvilDistance()
         if (Math.round(Math.random()) && evilNpc.character.type == 'vampire') {
             const healthy = this.healthTeamNpc()
-            console.log(healthy)
             if (healthy != undefined) {
                 return {health: healthy}
             }
