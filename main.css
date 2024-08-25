@@ -240,6 +240,16 @@ body {
   animation: 500ms fade ease-out;
 }
 
+.health {
+  position: absolute;
+  width: var(--cell-size);
+  text-align: center;
+  z-index: 999;
+  color: rgb(0, 255, 34);
+  font-weight: bold;
+  animation: 500ms fade ease-out;
+}
+
 @keyframes fade {
   from {
     opacity: 0;
@@ -262,6 +272,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
   height: 100%;
   width: 100%;
   position: absolute;
@@ -279,7 +290,7 @@ body {
   font-family: 'Fontname';
   font-size: 100px;
   letter-spacing: 10px;
-  animation: moveIn 3s 0s cubic-bezier(.36,0,.06,1) alternate 1 ;
+  animation: moveIn 3s 0s cubic-bezier(.36,0,.06,1) alternate 1;
 }
 
 .wintext {
