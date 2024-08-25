@@ -11,6 +11,7 @@ import { calcPosition, findUniquePosition } from './utils'
 import cursors from './cursors'
 import EvilTeam from './EvilTeam'
 import GameState from "./GameState"
+import Event from './Event'
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -26,6 +27,7 @@ export default class GameController {
     this.evilTeamStep = new EvilTeam(this.gamePlay.boardSize);
     this.antiFast = true;
     this.round = 0;
+    this.bloodMoonEvent = true;
   }
 
   init() {
@@ -117,10 +119,7 @@ export default class GameController {
         boardEl.style.position = 'relative';
         const div = document.createElement('div')
         div.classList.add('theendinfo')
-        const text = document.createElement('span')
-        text.textContent = 'ПОМЕР',
-        text.classList.add('losetext')
-        div.appendChild(text)
+        div.innerHTML = `<span class="losetext">ПОМЕР</span>`
         boardEl.appendChild(div)
       }
       if (!this.evilTeam.length && this.round < 3) {
@@ -135,16 +134,18 @@ export default class GameController {
         GameState.saveFirstInfo(this.evilTeam.length)
         this.gamePlay.drawUi(Object.entries(themes)[this.round][1])
         this.gamePlay.redrawPositions([...this.playerTeam, ...this.evilTeam])
+        if (this.bloodMoonEvent && Math.round(Math.random() - 0.2)) {
+          this.bloodMoonEvent = false 
+          const abil = new Event()
+          this.evilTeam = abil.bloodMoon(this.evilTeam)
+        }
       } else if (!this.evilTeam.length) {
-        console.log(GameState.calculatePoint(this.playerTeam))
+        const point = GameState.calculatePoint(this.playerTeam)
         const boardEl = document.querySelector('.board-container');
         boardEl.style.position = 'relative';
         const div = document.createElement('div')
         div.classList.add('theendinfo')
-        const text = document.createElement('span')
-        text.textContent = 'ПОБЕДА',
-        text.classList.add('wintext')
-        div.appendChild(text)
+        div.innerHTML = `<span class="wintext">ПОБЕДА</span><span class="wintext" style="font-size: 25px">Вы заработали ${point} очков</span>`
         boardEl.appendChild(div)
       }
     }
@@ -170,7 +171,7 @@ export default class GameController {
         }
         this.gamePlay.selectCell(index, 'green')
         this.gamePlay.setCursor(cursors.pointer) 
-        if (npc && npc.position == index) {
+        if (npc && npc.position == index && this.currentChar != null) {
           this.gamePlay.deselectCell(index)
         }
         this.currentChar = index;
@@ -185,7 +186,9 @@ export default class GameController {
         }
       } else if (Math.max(this.stepX, this.stepY) <= this.currentNpc.distance && 0 < Math.max(this.stepX, this.stepY)) {
         this.gamePlay.setCursor(cursors.pointer) 
-        this.gamePlay.deselectCell(this.currentChar)
+        if (this.currentChar != null) {
+          this.gamePlay.deselectCell(this.currentChar)
+        }
         if (evilNpc && evilNpc.position == index) {
           this.gamePlay.selectCell(index, 'red')
           this.gamePlay.setCursor(cursors.crosshair)
@@ -193,7 +196,9 @@ export default class GameController {
         }
       } else {
         this.gamePlay.setCursor(cursors.notallowed)
-        this.gamePlay.deselectCell(this.currentChar)
+        if (this.currentChar != null) {
+          this.gamePlay.deselectCell(this.currentChar)
+        }
       }
     }
   }
@@ -259,6 +264,7 @@ export default class GameController {
     this.stepY = undefined;
     this.evilTeamStep = new EvilTeam(this.gamePlay.boardSize);
     this.round = 0;
+    this.bloodMoonEvent = true;
     this.gamePlay.drawUi(Object.entries(themes)[this.round][1])
     this.gamePlay.redrawPositions([...this.playerTeam, ...this.evilTeam])
   }
@@ -267,12 +273,13 @@ export default class GameController {
     this.playerTeam = storageData.player
     this.evilTeam = storageData.evil
     this.round = storageData.round
+    this.bloodMoonEvent = storageData.bloodMoonEvent
     this.gamePlay.drawUi(Object.entries(themes)[this.round][1])
     this.gamePlay.redrawPositions([...this.playerTeam, ...this.evilTeam])
   }
 
   saveGame() {
-    this.stateService.save({player: this.playerTeam, evil: this.evilTeam, round: this.round})
+    this.stateService.save({player: this.playerTeam, evil: this.evilTeam, round: this.round, bloodMoonEvent: this.bloodMoonEvent})
   }
 
 }
